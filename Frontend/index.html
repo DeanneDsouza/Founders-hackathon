@@ -5,253 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RouteFinder</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --accent: #7c5cfc;
-      --accent2: #c45cfc;
-      --glass-bg: rgba(255,255,255,0.12);
-      --glass-border: rgba(255,255,255,0.22);
-      --input-bg: rgba(255,255,255,0.88);
-      --input-bg2: rgba(255,248,235,0.82);
-      --text-light: #ffffff;
-      --shadow: 0 8px 40px rgba(0,0,0,0.3);
-      --radius: 20px;
-    }
-
-    html, body {
-      height: 100%;
-      font-family: 'DM Sans', sans-serif;
-      overflow: hidden;
-    }
-
-    /* ── Wallpaper Carousel ── */
-    .bg-track {
-      position: fixed; inset: 0;
-      display: flex;
-      transition: transform 0.75s cubic-bezier(0.77,0,0.18,1);
-      will-change: transform;
-    }
-
-    .bg-slide {
-      min-width: 100vw; height: 100vh;
-      background-size: cover;
-      background-position: center;
-      position: relative;
-    }
-
-    /* Darkening overlay per slide */
-    .bg-slide::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(to bottom,
-        rgba(0,0,0,0.30) 0%,
-        rgba(0,0,0,0.15) 40%,
-        rgba(0,0,0,0.45) 100%);
-    }
-
-    /* Individual slide images */
-    .bg-slide:nth-child(1) { background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80'); }
-    .bg-slide:nth-child(2) { background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1600&q=80'); }
-    .bg-slide:nth-child(3) { background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=80'); }
-    .bg-slide:nth-child(4) { background-image: url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1600&q=80'); }
-    .bg-slide:nth-child(5) { background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80'); }
-
-    /* ── Click Zones ── */
-    .click-zone {
-      position: fixed; top: 0; bottom: 0; width: 30%;
-      z-index: 5; cursor: pointer;
-      display: flex; align-items: center;
-      opacity: 0;
-      transition: opacity 0.25s;
-    }
-    .click-zone:hover { opacity: 1; }
-
-    .click-zone.left  { left: 0;  justify-content: flex-start; padding-left: 24px; }
-    .click-zone.right { right: 0; justify-content: flex-end;   padding-right: 24px; }
-
-    .arrow-btn {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.18);
-      border: 1.5px solid rgba(255,255,255,0.35);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      color: #fff;
-      transition: background 0.2s, transform 0.2s;
-    }
-    .click-zone:hover .arrow-btn {
-      background: rgba(255,255,255,0.30);
-      transform: scale(1.08);
-    }
-    .arrow-btn svg { width: 22px; height: 22px; }
-
-    /* ── Main UI ── */
-    .ui-layer {
-      position: fixed; inset: 0;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 16px;
-      pointer-events: none;
-    }
-
-    /* Logo */
-    .logo-wrap {
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
-      margin-bottom: 36px;
-      animation: fadeDown 0.8s cubic-bezier(0.22,1,0.36,1) both;
-    }
-    .logo-icon {
-      width: 72px; height: 72px; border-radius: 20px;
-      background: linear-gradient(135deg, #7c5cfc 0%, #c45cfc 100%);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 6px 32px rgba(124,92,252,0.55);
-    }
-    .logo-icon svg { width: 38px; height: 38px; }
-    .logo-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.2rem, 5vw, 3.2rem);
-      font-weight: 700; color: #fff;
-      text-shadow: 0 2px 20px rgba(0,0,0,0.4);
-      letter-spacing: -0.5px;
-    }
-    .logo-sub {
-      font-size: 1rem; color: rgba(255,255,255,0.80);
-      font-weight: 400; letter-spacing: 0.02em;
-      margin-top: -4px;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.3);
-    }
-
-    /* Card */
-    .card {
-      width: 100%; max-width: 560px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(22px) saturate(1.4);
-      -webkit-backdrop-filter: blur(22px) saturate(1.4);
-      border: 1.5px solid var(--glass-border);
-      border-radius: 28px;
-      padding: 36px 36px 32px;
-      box-shadow: var(--shadow);
-      pointer-events: all;
-      animation: fadeUp 0.9s 0.1s cubic-bezier(0.22,1,0.36,1) both;
-    }
-
-    .field-label {
-      display: flex; align-items: center; gap: 8px;
-      color: #fff; font-weight: 600; font-size: 0.95rem;
-      margin-bottom: 10px;
-      text-shadow: 0 1px 6px rgba(0,0,0,0.3);
-    }
-    .field-label svg { width: 18px; height: 18px; flex-shrink: 0; }
-
-    .input-field {
-      width: 100%;
-      padding: 16px 20px;
-      border-radius: 14px;
-      border: none; outline: none;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 1rem;
-      color: #2a2a2a;
-      transition: box-shadow 0.2s, transform 0.15s;
-    }
-    .input-field:focus {
-      box-shadow: 0 0 0 3px rgba(124,92,252,0.45);
-      transform: translateY(-1px);
-    }
-    .input-field::placeholder { color: #aaa; }
-
-    .input-start { background: var(--input-bg); }
-    .input-end   { background: var(--input-bg2); }
-
-    /* Swap button */
-    .swap-wrap {
-      display: flex; justify-content: center; margin: 14px 0;
-    }
-    .swap-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: rgba(255,255,255,0.18);
-      border: 1.5px solid rgba(255,255,255,0.35);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #fff;
-      transition: background 0.2s, transform 0.3s;
-    }
-    .swap-btn:hover { background: rgba(255,255,255,0.28); transform: rotate(180deg); }
-    .swap-btn svg { width: 18px; height: 18px; }
-
-    /* Calculate button */
-    .calc-btn {
-      width: 100%; margin-top: 24px;
-      padding: 18px;
-      border: none; border-radius: 16px;
-      background: linear-gradient(90deg, #5b8dee 0%, var(--accent) 50%, var(--accent2) 100%);
-      background-size: 200% 100%;
-      color: #fff; font-family: 'DM Sans', sans-serif;
-      font-size: 1.05rem; font-weight: 600;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      box-shadow: 0 4px 24px rgba(124,92,252,0.45);
-      transition: background-position 0.4s, transform 0.15s, box-shadow 0.2s;
-    }
-    .calc-btn:hover {
-      background-position: 100% 0;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(124,92,252,0.60);
-    }
-    .calc-btn:active { transform: translateY(0); }
-    .calc-btn svg { width: 20px; height: 20px; }
-
-    /* Dark mode toggle */
-    .dark-toggle {
-      position: fixed; top: 20px; right: 20px; z-index: 20;
-      width: 44px; height: 44px; border-radius: 50%;
-      background: rgba(255,255,255,0.14);
-      border: 1.5px solid rgba(255,255,255,0.28);
-      backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #fff;
-      transition: background 0.2s;
-    }
-    .dark-toggle:hover { background: rgba(255,255,255,0.25); }
-    .dark-toggle svg { width: 20px; height: 20px; }
-
-    /* Dots */
-    .dots {
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-      z-index: 20;
-      display: flex; gap: 10px; align-items: center;
-    }
-    .dot {
-      width: 28px; height: 7px; border-radius: 4px;
-      background: rgba(255,255,255,0.38);
-      transition: background 0.3s, width 0.3s;
-      cursor: pointer;
-    }
-    .dot.active {
-      width: 40px;
-      background: rgba(255,255,255,0.90);
-    }
-
-    /* Animations */
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Slide transition flash for background */
-    .bg-track.sliding .bg-slide::after {
-      transition: background 0.75s;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
@@ -280,10 +34,17 @@
     </div>
   </div>
 
-  <!-- Dark toggle -->
-  <button class="dark-toggle" id="darkToggle" title="Toggle theme">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Dark mode toggle -->
+  <button class="dark-toggle" id="darkToggle" title="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
   </button>
 
@@ -291,7 +52,6 @@
   <div class="ui-layer">
     <div class="logo-wrap">
       <div class="logo-icon">
-        <!-- Paper plane icon -->
         <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M33 5L5 17l11 4 4 11 13-27z" fill="white" opacity="0.9"/>
           <path d="M16 21l5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -301,7 +61,7 @@
       <div class="logo-sub">Find your perfect journey</div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card">
       <!-- Start -->
       <div class="field-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -310,15 +70,6 @@
         Start Destination
       </div>
       <input id="startInput" class="input-field input-start" type="text" placeholder="Enter your starting point" autocomplete="off"/>
-
-      <!-- Swap -->
-      <div class="swap-wrap">
-        <button class="swap-btn" id="swapBtn" title="Swap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
-          </svg>
-        </button>
-      </div>
 
       <!-- End -->
       <div class="field-label">
@@ -332,7 +83,11 @@
       <!-- Button -->
       <button class="calc-btn" id="calcBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+          <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+          <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+          <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+          <line x1="17" y1="16" x2="23" y2="16"/>
         </svg>
         Calculate Routes
       </button>
@@ -342,112 +97,6 @@
   <!-- Dot indicators -->
   <div class="dots" id="dots"></div>
 
-  <script>
-    const TOTAL = 5;
-    let current = 0;
-    let isAnimating = false;
-
-    const track = document.getElementById('bgTrack');
-    const dotsWrap = document.getElementById('dots');
-    const zoneLeft = document.getElementById('zoneLeft');
-    const zoneRight = document.getElementById('zoneRight');
-    const swapBtn = document.getElementById('swapBtn');
-    const startInput = document.getElementById('startInput');
-    const endInput   = document.getElementById('endInput');
-    const calcBtn    = document.getElementById('calcBtn');
-
-    // Build dots
-    for (let i = 0; i < TOTAL; i++) {
-      const d = document.createElement('div');
-      d.className = 'dot' + (i === 0 ? ' active' : '');
-      d.addEventListener('click', () => goTo(i));
-      dotsWrap.appendChild(d);
-    }
-
-    function updateDots() {
-      document.querySelectorAll('.dot').forEach((d, i) => {
-        d.classList.toggle('active', i === current);
-      });
-    }
-
-    function goTo(index) {
-      if (isAnimating || index === current) return;
-      isAnimating = true;
-      current = (index + TOTAL) % TOTAL;
-      track.style.transform = `translateX(-${current * 100}vw)`;
-      updateDots();
-      setTimeout(() => { isAnimating = false; }, 780);
-    }
-
-    function next() { goTo(current + 1); }
-    function prev() { goTo(current - 1); }
-
-    zoneRight.addEventListener('click', next);
-    zoneLeft.addEventListener('click', prev);
-
-    // Keyboard nav
-    document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight') next();
-      if (e.key === 'ArrowLeft')  prev();
-    });
-
-    // Touch/swipe support
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    document.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(dx) > 50) dx < 0 ? next() : prev();
-    });
-
-    // Auto-advance every 8s
-    let autoTimer = setInterval(next, 8000);
-    function resetAuto() { clearInterval(autoTimer); autoTimer = setInterval(next, 8000); }
-    [zoneLeft, zoneRight].forEach(z => z.addEventListener('click', resetAuto));
-    dotsWrap.addEventListener('click', resetAuto);
-
-    // Swap
-    swapBtn.addEventListener('click', () => {
-      const tmp = startInput.value;
-      startInput.value = endInput.value;
-      endInput.value = tmp;
-    });
-
-    // Calculate button flash
-    calcBtn.addEventListener('click', () => {
-      const s = startInput.value.trim();
-      const e = endInput.value.trim();
-      if (!s || !e) {
-        (!s ? startInput : endInput).style.boxShadow = '0 0 0 3px rgba(255,80,80,0.55)';
-        setTimeout(() => {
-          startInput.style.boxShadow = '';
-          endInput.style.boxShadow = '';
-        }, 1200);
-        return;
-      }
-      calcBtn.textContent = '🗺 Finding routes…';
-      calcBtn.style.opacity = '0.75';
-      setTimeout(() => {
-        calcBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
-          </svg>
-          Calculate Routes`;
-        calcBtn.style.opacity = '1';
-      }, 2000);
-    });
-
-    // Dark mode toggle (dims overlay)
-    const darkBtn = document.getElementById('darkToggle');
-    let darkMode = false;
-    darkBtn.addEventListener('click', () => {
-      darkMode = !darkMode;
-      document.querySelectorAll('.bg-slide').forEach(s => {
-        s.style.filter = darkMode ? 'brightness(0.5)' : '';
-      });
-      darkBtn.innerHTML = darkMode
-        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
