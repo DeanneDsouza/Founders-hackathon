@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RouteFinder — Routes</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="routes.css"/>
+</head>
+<body>
+
+  <!-- ── Top nav bar ── -->
+  <header class="topbar">
+    <a href="../First%20Page/index.html" class="back-btn" title="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </a>
+
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 38 38" fill="none">
+          <path d="M33 5L5 17l11 4 4 11 13-27z" fill="white" opacity="0.9"/>
+          <path d="M16 21l5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="brand-name">RouteFinder</span>
+    </div>
+
+    <div class="route-crumb" id="routeCrumb">
+      <!-- filled by JS -->
+    </div>
+  </header>
+
+  <!-- ── Hero banner with scenic images ── -->
+  <section class="hero">
+    <div class="hero-images" id="heroImages">
+      <!-- filled by JS -->
+    </div>
+    <div class="hero-overlay">
+      <h1 class="hero-title">Available Routes</h1>
+      <p class="hero-sub" id="heroSub"></p>
+    </div>
+  </section>
+
+  <!-- ── Main content ── -->
+  <main class="content">
+
+    <!-- Route type selector -->
+    <div class="filter-row">
+      <div class="filter-label">Select Route Type</div>
+      <div class="select-wrap">
+        <select id="routeType">
+          <option value="adventurous">Adventurous</option>
+          <option value="cinematic">Cinematic</option>
+          <option value="fastest">Fastest</option>
+          <option value="scenic">Scenic</option>
+          <option value="offroad">Off-Road</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Route cards container -->
+    <div class="section-title" id="sectionTitle">Adventurous Routes</div>
+    <div class="routes-list" id="routesList">
+      <!-- cards injected by JS -->
+    </div>
+
+  </main>
+
+  <script src="routes.js"></script>
+</body>
+</html>
