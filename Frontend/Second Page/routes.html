@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RouteFinder — Routes</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <link rel="stylesheet" href="routes.css"/>
+</head>
+<body>
+
+  <!-- ── Topbar ── -->
+  <header class="topbar">
+    <a href="../First%20Page/index.html" class="back-btn" title="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </a>
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 38 38" fill="none">
+          <path d="M33 5L5 17l11 4 4 11 13-27z" fill="white" opacity="0.9"/>
+          <path d="M16 21l5-5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="brand-name">RouteFinder</span>
+    </div>
+    <div class="route-crumb" id="routeCrumb"></div>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="content">
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="filter-left">
+        <div class="section-label">Route Type</div>
+        <div class="type-tabs" id="typeTabs">
+          <button class="type-tab active" data-type="fastest">⚡ Fastest</button>
+          <button class="type-tab" data-type="scenic">🌄 Scenic</button>
+          <button class="type-tab" data-type="adventurous">🏕 Adventurous</button>
+          <button class="type-tab" data-type="cinematic">🎬 Cinematic</button>
+          <button class="type-tab" data-type="offroad">🪨 Off-Road</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Route cards — injected by JS -->
+    <div class="routes-list" id="routesList">
+      <div class="global-loading" id="globalLoading">
+        <div class="big-spinner"></div>
+        <p>Fetching routes…</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="routes.js"></script>
+</body>
+</html>
