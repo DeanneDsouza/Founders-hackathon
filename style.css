@@ -435,11 +435,17 @@ html, body {
   border-radius: 14px;
   box-shadow: 0 16px 48px rgba(0,0,0,0.60);
   backdrop-filter: blur(20px);
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 340px; /* fits ~8 results, scrollable beyond */
   opacity: 0;
   transform: translateY(-6px);
   transition: opacity 0.18s ease, transform 0.18s ease;
+  /* custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124,92,252,0.4) transparent;
 }
+.ac-dropdown::-webkit-scrollbar { width: 4px; }
+.ac-dropdown::-webkit-scrollbar-thumb { background: rgba(124,92,252,0.4); border-radius: 4px; }
 
 .ac-dropdown.open {
   display: block;
@@ -512,3 +518,19 @@ html, body {
   flex-shrink: 0;
 }
 @keyframes acSpin { to { transform: rotate(360deg); } }
+
+/* ── Place type tag inside dropdown sub-line ── */
+.ac-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 100px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(124, 92, 252, 0.18);
+  color: rgba(167, 139, 250, 0.9);
+  border: 1px solid rgba(124, 92, 252, 0.25);
+  vertical-align: middle;
+}

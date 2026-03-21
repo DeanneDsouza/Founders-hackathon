@@ -283,7 +283,7 @@ function renderCard(variant, typeColor, index) {
         ${variant.highlights.map(h => `<li>${h}</li>`).join('')}
       </ul>
       <div class="card-steps" id="steps-${variant.id}"></div>
-      <button class="select-btn" type="button">
+      <button class="select-btn" type="button" data-variant-id="${variant.id}">
         Select Route
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -317,11 +317,19 @@ async function initMap(variant, profile) {
   }
   coords.push([TO_LAT, TO_LON]);
 
+  // Fix: kill Leaflet default marker icon (causes giant arrow when PNG missing)
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconUrl:       'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=',
+    shadowUrl:     'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=',
+    iconRetinaUrl: 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=',
+  });
+
   // Create Leaflet map
   const map = L.map(mapEl, {
     zoomControl: true,
     attributionControl: true,
-    scrollWheelZoom: false,  // prevent accidental zoom while scrolling page
+    scrollWheelZoom: false,
   });
   leafletMaps[variant.id] = map;
 
@@ -437,6 +445,30 @@ async function renderType(typeKey) {
   def.variants.forEach((variant, i) => {
     const card = renderCard(variant, variant.color, i);
     list.appendChild(card);
+
+    // Wire Select Route button → navigate to directions page
+    card.querySelector('.select-btn').addEventListener('click', () => {
+      const currentType = document.querySelector('.type-tab.active')?.dataset.type || 'fastest';
+      const backParams  = new URLSearchParams(window.location.search).toString();
+      const dp = new URLSearchParams({
+        from:           FROM,
+        to:             TO,
+        fromLat:        FROM_LAT,
+        fromLon:        FROM_LON,
+        toLat:          TO_LAT,
+        toLon:          TO_LON,
+        routeId:        variant.id,
+        routeTitle:     variant.title,
+        routeDesc:      variant.desc,
+        routeDiff:      variant.difficulty,
+        routeColor:     variant.color,
+        routeProfile:   def.profile,
+        waypointOffset: variant.waypointOffset || 0,
+        routeHighlights: encodeURIComponent(JSON.stringify(variant.highlights)),
+        backParams:     backParams,
+      });
+      window.location.href = `directions.html?${dp}`;
+    });
   });
 
   // Then asynchronously fetch + draw each map
