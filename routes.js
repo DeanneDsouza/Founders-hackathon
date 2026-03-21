@@ -22,8 +22,17 @@ const TO_LON   = parseFloat(p.get('toLon'));
 // Validate we actually have coordinates
 const hasCoords = !isNaN(FROM_LAT) && !isNaN(FROM_LON) && !isNaN(TO_LAT) && !isNaN(TO_LON);
 
-// ── OSRM endpoint ───────────────────────────────────────
-const OSRM = 'https://router.project-osrm.org/route/v1';
+// ── OSRM endpoints — different servers per profile ──────
+// router.project-osrm.org  = driving only
+// routing.openstreetmap.de = car, bike, foot all supported
+const OSRM_BASE = {
+  driving: 'https://routing.openstreetmap.de/routed-car/route/v1',
+  cycling: 'https://routing.openstreetmap.de/routed-bike/route/v1',
+  foot:    'https://routing.openstreetmap.de/routed-foot/route/v1',
+};
+function osrmBase(profile) {
+  return OSRM_BASE[profile] || OSRM_BASE.driving;
+}
 
 // ── Route type definitions ──────────────────────────────
 // Each type maps to an OSRM profile and optional waypoint strategy
@@ -211,7 +220,9 @@ function fmtTime(secs) {
 function osrmUrl(profile, coords) {
   // coords: [[lat,lon], [lat,lon], ...]  → OSRM wants lon,lat
   const coordStr = coords.map(([la, lo]) => `${lo},${la}`).join(';');
-  return `${OSRM}/${profile}/${coordStr}?overview=full&geometries=geojson&steps=true`;
+  // routing.openstreetmap.de uses /profile/route/v1/driving/coords
+  // the "driving" at the end is always "driving" regardless of the subdomain
+  return `${osrmBase(profile)}/driving/${coordStr}?overview=full&geometries=geojson&steps=true`;
 }
 
 // ── Fetch a single OSRM route ───────────────────────────
@@ -269,13 +280,23 @@ function renderCard(variant, typeColor, index) {
       <div class="card-title">${variant.title}</div>
       <div class="card-desc">${variant.desc}</div>
       <div class="card-meta" id="meta-${variant.id}">
-        <div class="meta-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span id="time-${variant.id}">Calculating…</span>
-        </div>
-        <div class="meta-pill">
+        <div class="meta-pill dist-pill">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           <span id="dist-${variant.id}">—</span>
+        </div>
+      </div>
+      <div class="mode-times" id="modes-${variant.id}">
+        <div class="mode-pill" id="mode-car-${variant.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <span>—</span>
+        </div>
+        <div class="mode-pill" id="mode-bike-${variant.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0 0-2H9l-3.5 9M5.5 17.5 9 9l3 3 4-6"/></svg>
+          <span>—</span>
+        </div>
+        <div class="mode-pill" id="mode-walk-${variant.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.5"/><path d="M9 8l2.5 2.5L9 16"/><path d="M15 8l-2.5 2.5L15 16"/><path d="M12 11l-3 5"/><path d="M12 11l3 5"/></svg>
+          <span>—</span>
         </div>
       </div>
       <div class="highlights-label">What you'll see</div>
@@ -329,7 +350,9 @@ async function initMap(variant, profile) {
   const map = L.map(mapEl, {
     zoomControl: true,
     attributionControl: true,
-    scrollWheelZoom: false,
+    scrollWheelZoom: false,   // prevent page-scroll hijack
+    dragging: true,           // always allow drag
+    touchZoom: true,
   });
   leafletMaps[variant.id] = map;
 
@@ -373,9 +396,31 @@ async function initMap(variant, profile) {
     return;
   }
 
-  // Update meta
-  if (timeEl) timeEl.textContent = fmtTime(route.duration);
+  // Update distance (shared across modes)
   if (distEl) distEl.textContent = fmtDist(route.distance);
+
+  // Populate primary mode time
+  const modeMap = { driving: 'car', cycling: 'bike', foot: 'walk' };
+  const primaryMode = modeMap[profile] || 'car';
+  const primaryEl = document.getElementById(`mode-${primaryMode}-${variant.id}`);
+  if (primaryEl) {
+    primaryEl.querySelector('span').textContent = fmtTime(route.duration);
+    primaryEl.classList.add('mode-primary');
+  }
+
+  // Fetch other two modes in parallel (use straight A→B, no waypoint — just for ETA)
+  const otherModes = [
+    { mode: 'driving', key: 'car' },
+    { mode: 'cycling', key: 'bike' },
+    { mode: 'foot',    key: 'walk' },
+  ].filter(m => m.mode !== profile);
+
+  const baseCoords = [[FROM_LAT, FROM_LON], [TO_LAT, TO_LON]];
+  otherModes.forEach(async ({ mode, key }) => {
+    const r = await fetchRoute(mode, baseCoords);
+    const el = document.getElementById(`mode-${key}-${variant.id}`);
+    if (el) el.querySelector('span').textContent = r ? fmtTime(r.duration) : '—';
+  });
 
   // Draw polyline
   const latLngs = coordsFromGeoJSON(route.geometry);
@@ -399,6 +444,11 @@ async function initMap(variant, profile) {
 
   // Fit map to route
   map.fitBounds(polyline.getBounds(), { padding: [24, 24] });
+  // Force Leaflet to recalculate container size after DOM paint — fixes drag misalignment
+  requestAnimationFrame(() => {
+    map.invalidateSize({ animate: false });
+    map.fitBounds(polyline.getBounds(), { padding: [24, 24] });
+  });
 
   // Turn-by-turn steps
   if (route.steps.length && stepsEl) {
