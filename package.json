@@ -1,0 +1,41 @@
+{
+  "name": "viberoute",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:5000",
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0",
+    "@react-google-maps/api": "^2.20.8",
+    "axios": "^1.5.0",
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0"
+  },
+  "scripts": {
+    "start": "npx serve public",
+    "build": "echo \"Vanilla UI natively ready. Run npx cap sync to update mobile builds.\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.2.0",
+    "react-scripts": "5.0.1"
+  }
+}
